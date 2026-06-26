@@ -12,6 +12,7 @@ import { GanttView } from './components/GanttView';
 import { SettingsView } from './components/SettingsView';
 import { FilterBar } from './components/FilterBar';
 import { TaskDialog } from './components/TaskDialog';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 import { Button } from './components/ui/Button';
 import { cn } from './utils';
 
@@ -100,6 +101,7 @@ function AppContent() {
       </div>
 
       <TaskDialog open={dialogOpen} onClose={closeDialog} task={editingTask} />
+      <PWAInstallPrompt />
     </div>
   );
 }

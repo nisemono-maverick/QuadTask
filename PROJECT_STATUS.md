@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-- **阶段**: Phase 3 进行中（深色模式、甘特图、UI 美化已完成）
+- **阶段**: Phase 3 进行中（深色模式、甘特图、UI 美化、PWA 离线支持已完成）
 - **位置**: `/Users/maverick/AIProjects/QuadTask`
 - **最后更新**: 2026-06-27
 - **构建状态**: ✅ 通过 (`npm run build` 成功，`npm run lint` 0 warnings/errors)
@@ -48,7 +48,7 @@
 
 - [x] 深色模式
 - [ ] 提醒通知（浏览器 Notification API）
-- [ ] PWA 离线支持（Service Worker + 安装提示）
+- [x] PWA 离线支持（Service Worker + 安装提示）
 - [ ] 键盘快捷键
 - [ ] 国际化（中/英）
 - [ ] 重复任务（预设规则 + Cron）
@@ -81,6 +81,7 @@ QuadTask/
 │   │   ├── TaskList.tsx        # 清单视图
 │   │   ├── CalendarView.tsx    # 日历视图
 │   │   ├── GanttView.tsx       # 甘特图视图
+│   │   ├── PWAInstallPrompt.tsx # PWA 安装提示
 │   │   └── SettingsView.tsx    # 设置 + 导入导出
 │   ├── db/
 │   │   ├── schema.ts      # Dexie 数据库定义
@@ -139,27 +140,26 @@ npm run lint
 - **智能清单**: 清单表新增 `filter_data` 字段保存筛选条件，选择智能清单时自动应用过滤
 - **状态管理**: React Context + useReducer 风格（MVP 阶段足够）
 - **样式**: Tailwind CSS + CSS 变量，支持浅色/深色/跟随系统三种主题
+- **PWA**: `vite-plugin-pwa` 生成 Service Worker，支持离线访问与安装到桌面
 
 ## 已知限制 / 注意事项
 
 1. **提醒通知未实现**: 没有到期提醒。
-2. **PWA 未实现**: 暂不支持离线使用与安装提示。
-3. **chunk 体积**: 生产构建 JS 约 1.1MB，建议后续按需 code-split。
-4. **npm registry**: 安装依赖时若官方 registry 超时，可切换淘宝镜像：
+2. **chunk 体积**: 生产构建 JS 约 1.1MB，建议后续按需 code-split。
+3. **npm registry**: 安装依赖时若官方 registry 超时，可切换淘宝镜像：
    ```bash
    npm install --registry=https://registry.npmmirror.com
    ```
 
 ## 下一步推荐工作
 
-Phase 2、深色模式、甘特图与 UI 美化已完成，若下次继续，建议按以下顺序推进 Phase 3：
+Phase 2、深色模式、甘特图、UI 美化与 PWA 已完成，若下次继续，建议按以下顺序推进 Phase 3：
 
 1. **提醒通知**: 浏览器 Notification API + 到期提醒
-2. **PWA 离线支持**: 添加 vite-plugin-pwa 和 Service Worker
-3. **键盘快捷键**: 快速创建、切换视图、完成任务
-4. **重复任务**: 预设规则 + Cron 调度
-5. **国际化（中/英）**
-6. **数据统计**: 完成趋势与象限分布图表
+2. **键盘快捷键**: 快速创建、切换视图、完成任务
+3. **重复任务**: 预设规则 + Cron 调度
+4. **国际化（中/英）**
+5. **数据统计**: 完成趋势与象限分布图表
 
 ## 启动检查清单（新会话）
 
