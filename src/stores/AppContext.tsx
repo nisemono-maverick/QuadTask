@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, type ReactNode } from 'react';
+import { useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import type {
   Task,
   List,
@@ -9,6 +9,7 @@ import type {
   Priority,
   Quadrant,
   SmartListFilter,
+  ThemeMode,
 } from '../types';
 import { AppContext } from './context';
 import {
@@ -38,6 +39,9 @@ import {
   reorderTasks,
   exportData as dbExportData,
   importData as dbImportData,
+  getSetting,
+  setSetting,
+  seedDemoTasks,
   type CreateTaskInput,
 } from '../db/operations';
 
@@ -52,6 +56,7 @@ interface AppState {
   editingTask: TaskWithTags | null;
   createDialogInitialDate: string | null;
   searchQuery: string;
+  theme: ThemeMode;
   filterTags: string[];
   filterPriorities: Priority[];
   filterStatus: 'all' | 'active' | 'completed';
@@ -67,6 +72,7 @@ export interface AppContextValue extends AppState {
   selectList: (id: string) => void;
   setViewMode: (mode: ViewMode) => void;
   setSearchQuery: (q: string) => void;
+  setTheme: (theme: ThemeMode) => void;
   setFilterTags: (tags: string[]) => void;
   setFilterPriorities: (priorities: Priority[]) => void;
   setFilterStatus: (status: 'all' | 'active' | 'completed') => void;
@@ -103,6 +109,8 @@ export interface AppContextValue extends AppState {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [lists, setLists] = useState<List[]>([]);
+  const listsRef = useRef(lists);
+  listsRef.current = lists;
   const [tags, setTags] = useState<Tag[]>([]);
   const [tasks, setTasks] = useState<TaskWithTags[]>([]);
   const [selectedListId, setSelectedListId] = useState<string>('all');
@@ -112,6 +120,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [editingTask, setEditingTask] = useState<TaskWithTags | null>(null);
   const [createDialogInitialDate, setCreateDialogInitialDate] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [theme, setThemeState] = useState<ThemeMode>('system');
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const [filterPriorities, setFilterPriorities] = useState<Priority[]>([]);
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'completed'>('all');
@@ -134,8 +143,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const isTrash = selectedListId === 'trash';
     const isCompleted = selectedListId === 'completed';
     const status = isCompleted ? 'completed' : filterStatus;
+    const selectedList = listsRef.current.find((l) => l.id === selectedListId);
+    const isSmartList = selectedList?.type === 'smart';
+
     const filter: Parameters<typeof filterTasks>[0] = {
-      listId: selectedListId,
+      listId: isSmartList ? undefined : selectedListId,
       deleted: isTrash,
       status,
       search: searchQuery || undefined,
@@ -155,6 +167,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSelectedListId('all');
     }
   }, []);
+
+  const applyThemeClass = useCallback((nextTheme: ThemeMode) => {
+    const html = document.documentElement;
+    html.classList.remove('light', 'dark');
+    if (nextTheme === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      html.classList.add(prefersDark ? 'dark' : 'light');
+    } else {
+      html.classList.add(nextTheme);
+    }
+  }, []);
+
+  const setTheme = useCallback(async (nextTheme: ThemeMode) => {
+    setThemeState(nextTheme);
+    applyThemeClass(nextTheme);
+    await setSetting('theme', nextTheme);
+  }, [applyThemeClass]);
 
   const clearFilters = useCallback(() => {
     setFilterTags([]);
@@ -327,7 +356,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (async () => {
       setLoading(true);
       await seedSystemLists();
+      await seedDemoTasks();
       if (mounted) {
+        const savedTheme = await getSetting<ThemeMode>('theme', 'system');
+        setThemeState(savedTheme);
+        applyThemeClass(savedTheme);
         await refreshLists();
         await refreshTags();
         await refreshTasks();
@@ -337,7 +370,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
     };
-  }, [refreshLists, refreshTags, refreshTasks]);
+  }, [refreshLists, refreshTags, refreshTasks, applyThemeClass]);
+
+  useEffect(() => {
+    if (theme !== 'system') return;
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => applyThemeClass('system');
+    media.addEventListener('change', handler);
+    return () => media.removeEventListener('change', handler);
+  }, [theme, applyThemeClass]);
 
   useEffect(() => {
     refreshTasks();
@@ -354,6 +395,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     editingTask,
     createDialogInitialDate,
     searchQuery,
+    theme,
     filterTags,
     filterPriorities,
     filterStatus,
@@ -366,6 +408,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     selectList,
     setViewMode: setViewModeAndReset,
     setSearchQuery,
+    setTheme,
     setFilterTags,
     setFilterPriorities,
     setFilterStatus,

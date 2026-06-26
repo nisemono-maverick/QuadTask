@@ -8,6 +8,7 @@ import { QuickAdd } from './components/QuickAdd';
 import { TaskList } from './components/TaskList';
 import { QuadrantGrid } from './components/QuadrantGrid';
 import { CalendarView } from './components/CalendarView';
+import { GanttView } from './components/GanttView';
 import { SettingsView } from './components/SettingsView';
 import { FilterBar } from './components/FilterBar';
 import { TaskDialog } from './components/TaskDialog';
@@ -89,10 +90,11 @@ function AppContent() {
         </header>
 
         {/* Main content */}
-        <main className="flex-1 overflow-hidden">
+        <main className={cn('flex-1', viewMode === 'quadrants' ? 'overflow-auto' : 'overflow-hidden')}>
           {viewMode === 'quadrants' && <QuadrantGrid />}
           {viewMode === 'list' && <TaskList />}
           {viewMode === 'calendar' && <CalendarView />}
+          {viewMode === 'gantt' && <GanttView />}
           {viewMode === 'settings' && <SettingsView />}
         </main>
       </div>

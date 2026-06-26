@@ -88,7 +88,9 @@ export interface TaskWithTags extends Task {
   sub_tasks?: SubTask[];
 }
 
-export type ViewMode = 'list' | 'quadrants' | 'calendar' | 'settings';
+export type ViewMode = 'list' | 'quadrants' | 'calendar' | 'gantt' | 'settings';
+
+export type ThemeMode = 'light' | 'dark' | 'system';
 
 export interface FilterState {
   query: string;

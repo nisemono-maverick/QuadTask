@@ -4,9 +4,9 @@
 
 ## 当前状态
 
-- **阶段**: Phase 2 已完成（标签管理、智能清单、响应式、虚拟滚动均已完成）
+- **阶段**: Phase 3 进行中（深色模式已完成）
 - **位置**: `/Users/maverick/AIProjects/QuadTask`
-- **最后更新**: 2026-06-25
+- **最后更新**: 2026-06-27
 - **构建状态**: ✅ 通过 (`npm run build` 成功，`npm run lint` 0 warnings/errors)
 
 ## 已实现功能
@@ -46,17 +46,19 @@
 
 ### Phase 3 — 体验增强
 
+- [x] 深色模式
 - [ ] 提醒通知（浏览器 Notification API）
 - [ ] PWA 离线支持（Service Worker + 安装提示）
-- [ ] 深色模式
 - [ ] 键盘快捷键
 - [ ] 国际化（中/英）
 - [ ] 重复任务（预设规则 + Cron）
+- [x] UI 组件美化（弹窗、自定义 Select、日期输入、Textarea）
 - [ ] 交互动效完善
 - [ ] 新手引导 / 种子数据
 
 ### Phase 4 — 扩展
 
+- [x] 甘特图视图（按时间/优先级/象限/清单排序）
 - [ ] 数据统计（完成趋势 + 象限分布图表）
 - [ ] 多端同步（WebDAV / 自建服务器）
 - [ ] 每日/每周摘要通知
@@ -77,6 +79,8 @@ QuadTask/
 │   │   ├── TaskCard.tsx        # 任务卡片
 │   │   ├── TaskDialog.tsx      # 任务创建/编辑弹窗
 │   │   ├── TaskList.tsx        # 清单视图
+│   │   ├── CalendarView.tsx    # 日历视图
+│   │   ├── GanttView.tsx       # 甘特图视图
 │   │   └── SettingsView.tsx    # 设置 + 导入导出
 │   ├── db/
 │   │   ├── schema.ts      # Dexie 数据库定义
@@ -134,28 +138,27 @@ npm run lint
 - **拖拽**: @dnd-kit 实现跨象限移动与清单内排序；释放后自动调整分值或持久化 sort_order
 - **智能清单**: 清单表新增 `filter_data` 字段保存筛选条件，选择智能清单时自动应用过滤
 - **状态管理**: React Context + useReducer 风格（MVP 阶段足够）
-- **样式**: Tailwind CSS + CSS 变量（当前仅浅色模式）
+- **样式**: Tailwind CSS + CSS 变量，支持浅色/深色/跟随系统三种主题
 
 ## 已知限制 / 注意事项
 
-1. **深色模式未实现**: 当前仅浅色模式，但 CSS 变量结构已预留。
-3. **移动端未适配**: 布局为桌面端优先。
-4. **提醒通知未实现**: 没有到期提醒。
-5. **chunk 体积**: 生产构建 JS 约 1MB，建议后续按需 code-split。
-6. **npm registry**: 安装依赖时若官方 registry 超时，可切换淘宝镜像：
+1. **移动端未适配**: 布局为桌面端优先。
+2. **提醒通知未实现**: 没有到期提醒。
+3. **chunk 体积**: 生产构建 JS 约 1MB，建议后续按需 code-split。
+4. **npm registry**: 安装依赖时若官方 registry 超时，可切换淘宝镜像：
    ```bash
    npm install --registry=https://registry.npmmirror.com
    ```
 
 ## 下一步推荐工作
 
-Phase 2 已完成，若下次继续，建议按以下顺序推进 Phase 3：
+Phase 2 与深色模式已完成，若下次继续，建议按以下顺序推进 Phase 3：
 
-1. **深色模式**: 完善 CSS 变量切换 + 设置项持久化
-2. **提醒通知**: 浏览器 Notification API + 到期提醒
-3. **PWA 离线支持**: 添加 vite-plugin-pwa 和 Service Worker
-4. **键盘快捷键**: 快速创建、切换视图、完成任务
-5. **重复任务**: 预设规则 + Cron 调度
+1. **提醒通知**: 浏览器 Notification API + 到期提醒
+2. **PWA 离线支持**: 添加 vite-plugin-pwa 和 Service Worker
+3. **键盘快捷键**: 快速创建、切换视图、完成任务
+4. **重复任务**: 预设规则 + Cron 调度
+5. **国际化（中/英）**
 
 ## 启动检查清单（新会话）
 

@@ -30,19 +30,19 @@ export function Dialog({ open, onClose, title, description, children, className,
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
     >
       <div
         className={cn(
-          'w-full max-w-lg rounded-xl bg-bg-primary shadow-lg border border-border-default overflow-hidden animate-in fade-in zoom-in-95 duration-200',
+          'flex w-full max-w-lg max-h-[90vh] flex-col rounded-2xl bg-bg-primary shadow-2xl border border-border-default overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-200',
           className
         )}
       >
         {(title || description) && (
-          <div className="flex items-start justify-between px-6 py-4 border-b border-border-default">
+          <div className="flex shrink-0 items-start justify-between px-6 py-4 border-b border-border-default">
             <div>
               {title && <h2 className="text-lg font-semibold text-text-primary">{title}</h2>}
               {description && <p className="mt-1 text-sm text-text-secondary">{description}</p>}
@@ -52,8 +52,8 @@ export function Dialog({ open, onClose, title, description, children, className,
             </Button>
           </div>
         )}
-        <div className="px-6 py-4">{children}</div>
-        {footer && <div className="flex justify-end gap-2 px-6 py-4 border-t border-border-default bg-bg-secondary">{footer}</div>}
+        <div className="flex-1 overflow-y-auto px-6 py-4">{children}</div>
+        {footer && <div className="flex shrink-0 justify-end gap-2 px-6 py-4 border-t border-border-default bg-bg-secondary">{footer}</div>}
       </div>
     </div>
   );

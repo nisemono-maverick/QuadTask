@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ClipboardList, Trash2, RotateCcw, CheckCircle2, GripVertical } from 'lucide-react';
 import {
   DndContext,
@@ -19,6 +20,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useApp } from '../hooks/useApp';
 import { TaskCard } from './TaskCard';
 import { Button } from './ui/Button';
+import { ConfirmDialog } from './ui/ConfirmDialog';
 import { VirtualList } from './VirtualList';
 import { cn } from '../utils';
 import type { TaskWithTags } from '../types';
@@ -56,11 +58,7 @@ function TaskItem({
           <Button
             variant="danger"
             size="sm"
-            onClick={() => {
-              if (confirm('确定永久删除该任务吗？')) {
-                onPermanentDelete(task.id);
-              }
-            }}
+            onClick={() => onPermanentDelete(task.id)}
             title="永久删除"
           >
             <Trash2 className="h-4 w-4" />
@@ -149,6 +147,18 @@ export function TaskList() {
   const isTrash = selectedListId === 'trash';
   const isCompletedList = selectedListId === 'completed';
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState('');
+  const [confirmDescription, setConfirmDescription] = useState('');
+  const [confirmAction, setConfirmAction] = useState<() => void>(() => () => {});
+
+  const openConfirm = (title: string, description: string, onConfirm: () => void) => {
+    setConfirmTitle(title);
+    setConfirmDescription(description);
+    setConfirmAction(() => onConfirm);
+    setConfirmOpen(true);
+  };
+
   const completedCount = tasks.filter((t) => t.status === 'completed').length;
   const activeCount = tasks.filter((t) => t.status !== 'completed').length;
 
@@ -215,11 +225,9 @@ export function TaskList() {
           <Button
             variant="danger"
             size="sm"
-            onClick={() => {
-              if (confirm('确定清空回收站吗？此操作不可撤销。')) {
-                emptyTrash();
-              }
-            }}
+            onClick={() =>
+              openConfirm('清空回收站', '回收站中的任务将被永久删除，此操作不可撤销。', () => emptyTrash())
+            }
           >
             <Trash2 className="mr-1 h-4 w-4" />
             清空回收站
@@ -255,7 +263,7 @@ export function TaskList() {
                           onClick={openEditDialog}
                           onDelete={deleteTask}
                           onRestore={restoreTask}
-                          onPermanentDelete={permanentDelete}
+                          onPermanentDelete={(id) => openConfirm('永久删除任务', '任务将被永久删除，无法恢复。', () => permanentDelete(id))}
                         />
                       ))}
                     </SortableContext>
@@ -270,7 +278,7 @@ export function TaskList() {
                       onClick={openEditDialog}
                       onDelete={deleteTask}
                       onRestore={restoreTask}
-                      onPermanentDelete={permanentDelete}
+                      onPermanentDelete={(id) => openConfirm('永久删除任务', '任务将被永久删除，无法恢复。', () => permanentDelete(id))}
                     />
                   ))
                 )}
@@ -296,7 +304,7 @@ export function TaskList() {
                             onClick={openEditDialog}
                             onDelete={deleteTask}
                             onRestore={restoreTask}
-                            onPermanentDelete={permanentDelete}
+                            onPermanentDelete={(id) => openConfirm('永久删除任务', '任务将被永久删除，无法恢复。', () => permanentDelete(id))}
                           />
                         )}
                       />
@@ -311,7 +319,7 @@ export function TaskList() {
                             onClick={openEditDialog}
                             onDelete={deleteTask}
                             onRestore={restoreTask}
-                            onPermanentDelete={permanentDelete}
+                            onPermanentDelete={(id) => openConfirm('永久删除任务', '任务将被永久删除，无法恢复。', () => permanentDelete(id))}
                           />
                         ))}
                       </div>
@@ -330,13 +338,24 @@ export function TaskList() {
                   onClick={openEditDialog}
                   onDelete={deleteTask}
                   onRestore={restoreTask}
-                  onPermanentDelete={permanentDelete}
+                  onPermanentDelete={(id) => openConfirm('永久删除任务', '任务将被永久删除，无法恢复。', () => permanentDelete(id))}
                 />
               ))
             )}
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          confirmAction();
+          setConfirmOpen(false);
+        }}
+        title={confirmTitle}
+        description={confirmDescription}
+      />
     </div>
   );
 }

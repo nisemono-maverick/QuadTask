@@ -365,9 +365,17 @@ function WeekView({
                   >
                     <div className="truncate font-medium">{task.title}</div>
                     <div className="mt-0.5 text-[10px] text-text-tertiary">
-                      {task.start_date && format(parseISO(task.start_date), 'HH:mm')}
-                      {task.start_date && task.due_date && ' - '}
-                      {task.due_date && format(parseISO(task.due_date), 'HH:mm')}
+                      {task.start_date && task.due_date && !isSameDay(parseISO(task.start_date), parseISO(task.due_date)) ? (
+                        <span>
+                          {format(parseISO(task.start_date), 'MM/dd HH:mm')} - {format(parseISO(task.due_date), 'MM/dd HH:mm')}
+                        </span>
+                      ) : (
+                        <span>
+                          {task.start_date && format(parseISO(task.start_date), 'HH:mm')}
+                          {task.start_date && task.due_date && ' - '}
+                          {task.due_date && format(parseISO(task.due_date), 'HH:mm')}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -410,8 +418,79 @@ function DayView({
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const dayTasks = tasks.filter((t) => isTaskOnDate(t, date));
   const dayCompleted = completedTasks.filter((t) => isTaskOnDate(t, date));
-  const allDayTasks = dayTasks.filter((t) => !t.start_date || !t.due_date);
-  const timedTasks = dayTasks.filter((t) => t.start_date && t.due_date);
+  const allDayTasks = dayTasks.filter(
+    (t) => !t.start_date || !t.due_date || !isSameDay(parseISO(t.start_date), parseISO(t.due_date))
+  );
+  const timedTasks = dayTasks.filter(
+    (t) => t.start_date && t.due_date && isSameDay(parseISO(t.start_date), parseISO(t.due_date))
+  );
+
+  // Layout timed tasks so overlapping ones are shown side-by-side
+  const timedLayouts = useMemo(() => {
+    const layouts = timedTasks
+      .map((task) => {
+        const start = parseISO(task.start_date!);
+        const end = parseISO(task.due_date!);
+        const dayStart = startOfDay(date);
+
+        let displayStart = start;
+        let displayEnd = end;
+        if (!isSameDay(start, end)) {
+          if (isSameDay(start, date)) {
+            displayEnd = endOfDay(date);
+          } else if (isSameDay(end, date)) {
+            displayStart = dayStart;
+          } else {
+            displayStart = dayStart;
+            displayEnd = endOfDay(date);
+          }
+        }
+
+        const startHour = displayStart.getHours() + displayStart.getMinutes() / 60;
+        const endHour = displayEnd.getHours() + displayEnd.getMinutes() / 60;
+        return {
+          task,
+          start,
+          end,
+          displayStart,
+          displayEnd,
+          startHour,
+          endHour,
+          top: startHour * 48,
+          height: Math.max(24, (endHour - startHour) * 48),
+          column: 0,
+          totalColumns: 1,
+        };
+      })
+      .sort((a, b) => a.startHour - b.startHour || a.endHour - b.endHour);
+
+    // Group overlapping tasks and assign columns within each group
+    let currentGroup: typeof layouts = [];
+    let groupEnd = -1;
+    const groups: (typeof layouts)[] = [];
+
+    for (const layout of layouts) {
+      if (currentGroup.length === 0 || layout.startHour < groupEnd) {
+        currentGroup.push(layout);
+        groupEnd = Math.max(groupEnd, layout.endHour);
+      } else {
+        groups.push(currentGroup);
+        currentGroup = [layout];
+        groupEnd = layout.endHour;
+      }
+    }
+    if (currentGroup.length > 0) groups.push(currentGroup);
+
+    for (const group of groups) {
+      const total = group.length;
+      group.forEach((layout, index) => {
+        layout.column = index;
+        layout.totalColumns = total;
+      });
+    }
+
+    return layouts;
+  }, [timedTasks, date]);
 
   return (
     <div className="h-full rounded-xl border border-border-default bg-bg-primary p-4">
@@ -456,28 +535,30 @@ function DayView({
         ))}
 
         {/* Timed tasks */}
-        {timedTasks.map((task) => {
-          if (!task.start_date || !task.due_date) return null;
-          const start = parseISO(task.start_date);
-          const end = parseISO(task.due_date);
-          const startHour = start.getHours() + start.getMinutes() / 60;
-          const endHour = end.getHours() + end.getMinutes() / 60;
-          const top = startHour * 48;
-          const height = Math.max(24, (endHour - startHour) * 48);
+        {timedLayouts.map((layout) => {
+          const { task, start, end, displayStart, displayEnd, top, height, column, totalColumns } = layout;
 
           return (
             <div
               key={task.id}
               onClick={() => onTaskClick(task)}
               className={cn(
-                'absolute left-14 right-2 cursor-pointer rounded border-l-2 bg-primary/10 px-2 py-1 text-xs hover:bg-primary/20',
+                'absolute cursor-pointer rounded border-l-2 bg-primary/10 px-2 py-1 text-xs hover:bg-primary/20',
                 task.due_date && parseISO(task.due_date) < new Date() ? 'border-danger text-danger' : 'border-primary text-text-primary'
               )}
-              style={{ top: `${top}px`, height: `${height}px` }}
+              style={{
+                top: `${top}px`,
+                height: `${height}px`,
+                left: `calc(3.5rem + (100% - 3.5rem - 0.5rem) * ${column} / ${totalColumns})`,
+                width: `calc((100% - 3.5rem - 0.5rem) / ${totalColumns} - 4px)`,
+              }}
             >
               <div className="truncate font-medium">{task.title}</div>
               <div className="text-[10px] text-text-secondary">
-                {format(start, 'HH:mm')} - {format(end, 'HH:mm')}
+                {format(displayStart, 'HH:mm')} - {format(displayEnd, 'HH:mm')}
+                {!isSameDay(start, end) && (
+                  <span className="ml-1 opacity-70">({format(start, 'MM/dd')} - {format(end, 'MM/dd')})</span>
+                )}
               </div>
             </div>
           );

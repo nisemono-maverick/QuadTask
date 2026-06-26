@@ -4,6 +4,9 @@ import type { TaskWithTags, Priority, SubTask } from '../types';
 import { useApp } from '../hooks/useApp';
 import { Dialog } from './ui/Dialog';
 import { Input } from './ui/Input';
+import { Select } from './ui/Select';
+import { Textarea } from './ui/Textarea';
+import { DateTimeInput } from './ui/DateTimeInput';
 import { Slider } from './ui/Slider';
 import { Button } from './ui/Button';
 import { getQuadrant, priorityToScores, MAX_SUBTASKS } from '../db/operations';
@@ -129,37 +132,26 @@ export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
           autoFocus
         />
 
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1.5">详细描述</label>
-          <textarea
-            value={form.description || ''}
-            onChange={(e) => handleChange('description', e.target.value)}
-            placeholder="添加备注（支持普通文本）"
-            rows={3}
-            className="w-full rounded-lg border border-border-default bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-border-focus focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors resize-none"
-          />
-        </div>
+        <Textarea
+          label="详细描述"
+          value={form.description || ''}
+          onChange={(e) => handleChange('description', e.target.value)}
+          placeholder="添加备注（支持普通文本）"
+          rows={3}
+        />
 
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1.5">开始时间</label>
-            <input
-              type="datetime-local"
-              value={formatDateTimeLocal(form.start_date)}
-              onChange={(e) => handleChange('start_date', e.target.value ? new Date(e.target.value).toISOString() : null)}
-              className="w-full rounded-lg border border-border-default bg-bg-primary px-3 py-2 text-sm text-text-primary focus:border-border-focus focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
-            />
-          </div>
+          <DateTimeInput
+            label="开始时间"
+            value={formatDateTimeLocal(form.start_date)}
+            onChange={(e) => handleChange('start_date', e.target.value ? new Date(e.target.value).toISOString() : null)}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1.5">结束时间</label>
-            <input
-              type="datetime-local"
-              value={formatDateTimeLocal(form.due_date)}
-              onChange={(e) => handleChange('due_date', e.target.value ? new Date(e.target.value).toISOString() : null)}
-              className="w-full rounded-lg border border-border-default bg-bg-primary px-3 py-2 text-sm text-text-primary focus:border-border-focus focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
-            />
-          </div>
+          <DateTimeInput
+            label="结束时间"
+            value={formatDateTimeLocal(form.due_date)}
+            onChange={(e) => handleChange('due_date', e.target.value ? new Date(e.target.value).toISOString() : null)}
+          />
         </div>
 
         <div>
@@ -209,19 +201,15 @@ export function TaskDialog({ open, onClose, task }: TaskDialogProps) {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1.5">所属清单</label>
-            <select
+            <Select
+              label="所属清单"
               value={form.list_id || ''}
-              onChange={(e) => handleChange('list_id', e.target.value || null)}
-              className="w-full rounded-lg border border-border-default bg-bg-primary px-3 py-2 text-sm text-text-primary focus:border-border-focus focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
-            >
-              <option value="">所有任务</option>
-              {customLists.map((list) => (
-                <option key={list.id} value={list.id}>
-                  {list.name}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => handleChange('list_id', v || null)}
+              options={[
+                { value: '', label: '所有任务' },
+                ...customLists.map((list) => ({ value: list.id, label: list.name })),
+              ]}
+            />
           </div>
 
           {tags.length > 0 && (
@@ -325,7 +313,7 @@ function SubTaskEditor({ taskId, subTasks }: { taskId: string; subTasks: SubTask
                 className={cn(
                   'flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors',
                   st.is_completed === 1
-                    ? 'bg-success border-success text-white'
+                    ? 'bg-success border-success text-text-primary'
                     : 'border-border-default hover:border-primary'
                 )}
               >

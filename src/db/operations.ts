@@ -43,6 +43,177 @@ export const seedSystemLists = async () => {
   );
 };
 
+export const seedDemoTasks = async (): Promise<void> => {
+  // Only seed if there are no tasks yet
+  const existing = await db.tasks.count();
+  if (existing > 0) return;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const iso = (offset: number) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + offset);
+    return d.toISOString();
+  };
+
+  const lists = await db.lists.toArray();
+  const workList = lists.find((l) => l.name === '工作')?.id;
+  const studyList = lists.find((l) => l.name === '学习')?.id;
+
+  const ts = now();
+  const demoTasks: Task[] = [
+    {
+      id: uuidv4(),
+      title: '项目启动会',
+      description: '召集相关方对齐项目目标与排期',
+      start_date: iso(0),
+      due_date: iso(2),
+      priority: 'high',
+      urgency: 9,
+      importance: 9,
+      status: 'active',
+      list_id: workList || null,
+      sort_order: Date.now(),
+      is_repeat: 0,
+      repeat_rule: null,
+      created_at: ts,
+      updated_at: ts,
+      completed_at: null,
+      deleted_at: null,
+      color: null,
+      parent_id: null,
+    },
+    {
+      id: uuidv4(),
+      title: '编写需求文档',
+      description: '整理功能清单与验收标准',
+      start_date: iso(1),
+      due_date: iso(5),
+      priority: 'high',
+      urgency: 4,
+      importance: 9,
+      status: 'active',
+      list_id: workList || null,
+      sort_order: Date.now() + 1,
+      is_repeat: 0,
+      repeat_rule: null,
+      created_at: ts,
+      updated_at: ts,
+      completed_at: null,
+      deleted_at: null,
+      color: null,
+      parent_id: null,
+    },
+    {
+      id: uuidv4(),
+      title: 'UI 设计方案',
+      description: '完成四象限与甘特图视图设计稿',
+      start_date: iso(3),
+      due_date: iso(6),
+      priority: 'medium',
+      urgency: 3,
+      importance: 8,
+      status: 'active',
+      list_id: studyList || null,
+      sort_order: Date.now() + 2,
+      is_repeat: 0,
+      repeat_rule: null,
+      created_at: ts,
+      updated_at: ts,
+      completed_at: null,
+      deleted_at: null,
+      color: null,
+      parent_id: null,
+    },
+    {
+      id: uuidv4(),
+      title: '前端功能开发',
+      description: '实现甘特图组件与视图切换',
+      start_date: iso(7),
+      due_date: iso(13),
+      priority: 'high',
+      urgency: 8,
+      importance: 9,
+      status: 'active',
+      list_id: workList || null,
+      sort_order: Date.now() + 3,
+      is_repeat: 0,
+      repeat_rule: null,
+      created_at: ts,
+      updated_at: ts,
+      completed_at: null,
+      deleted_at: null,
+      color: null,
+      parent_id: null,
+    },
+    {
+      id: uuidv4(),
+      title: '后端接口联调',
+      description: '对接 IndexedDB 数据层',
+      start_date: iso(7),
+      due_date: iso(11),
+      priority: 'medium',
+      urgency: 8,
+      importance: 4,
+      status: 'active',
+      list_id: workList || null,
+      sort_order: Date.now() + 4,
+      is_repeat: 0,
+      repeat_rule: null,
+      created_at: ts,
+      updated_at: ts,
+      completed_at: null,
+      deleted_at: null,
+      color: null,
+      parent_id: null,
+    },
+    {
+      id: uuidv4(),
+      title: '编写测试用例',
+      description: '覆盖四象限拖拽与清单筛选',
+      start_date: iso(10),
+      due_date: iso(13),
+      priority: 'low',
+      urgency: 2,
+      importance: 3,
+      status: 'active',
+      list_id: studyList || null,
+      sort_order: Date.now() + 5,
+      is_repeat: 0,
+      repeat_rule: null,
+      created_at: ts,
+      updated_at: ts,
+      completed_at: null,
+      deleted_at: null,
+      color: null,
+      parent_id: null,
+    },
+    {
+      id: uuidv4(),
+      title: '用户反馈整理',
+      description: '收集并归类近期用户建议',
+      start_date: iso(-2),
+      due_date: iso(-1),
+      priority: 'low',
+      urgency: 3,
+      importance: 2,
+      status: 'completed',
+      list_id: null,
+      sort_order: Date.now() + 6,
+      is_repeat: 0,
+      repeat_rule: null,
+      created_at: ts,
+      updated_at: ts,
+      completed_at: ts,
+      deleted_at: null,
+      color: null,
+      parent_id: null,
+    },
+  ];
+
+  await db.tasks.bulkAdd(demoTasks);
+};
+
 // Tasks
 
 export interface CreateTaskInput {

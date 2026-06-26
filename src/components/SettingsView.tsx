@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react';
-import { Download, Upload, Settings, AlertCircle } from 'lucide-react';
+import { Download, Upload, Settings, AlertCircle, Sun, Moon, Monitor } from 'lucide-react';
 import { useApp } from '../hooks/useApp';
 import { Button } from './ui/Button';
+import type { ThemeMode } from '../types';
+import { cn } from '../utils';
 
 export function SettingsView() {
-  const { exportData, importData } = useApp();
+  const { exportData, importData, theme, setTheme } = useApp();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -90,6 +92,33 @@ export function SettingsView() {
                 {success}
               </div>
             )}
+          </section>
+
+          <section className="rounded-xl border border-border-default bg-bg-primary p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <Monitor className="h-5 w-5 text-primary" />
+              <h2 className="text-base font-semibold text-text-primary">外观</h2>
+            </div>
+            <p className="mb-4 text-sm text-text-secondary">
+              选择适合您的界面主题，设置会自动保存到本地。
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {([
+                { key: 'light', label: '浅色', icon: Sun },
+                { key: 'dark', label: '深色', icon: Moon },
+                { key: 'system', label: '跟随系统', icon: Monitor },
+              ] as { key: ThemeMode; label: string; icon: typeof Sun }[]).map(({ key, label, icon: Icon }) => (
+                <Button
+                  key={key}
+                  variant={theme === key ? 'primary' : 'secondary'}
+                  onClick={() => setTheme(key)}
+                  className={cn('px-3', theme === key && 'ring-2 ring-primary ring-offset-1 ring-offset-bg-primary')}
+                >
+                  <Icon className="mr-2 h-4 w-4" />
+                  {label}
+                </Button>
+              ))}
+            </div>
           </section>
 
           <section className="rounded-xl border border-border-default bg-bg-primary p-6">

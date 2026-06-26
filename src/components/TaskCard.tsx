@@ -37,7 +37,7 @@ export function TaskCard({ task, onToggle, onClick, onDelete, className, draggin
         className={cn(
           'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all duration-200',
           completed
-            ? 'bg-success border-success text-white'
+            ? 'bg-success border-success text-text-primary'
             : 'border-border-default bg-bg-primary hover:border-primary'
         )}
       >

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { parseISO, isPast } from 'date-fns';
 import {
   DndContext,
   DragOverlay,
@@ -37,7 +38,7 @@ function DraggableTaskCard({ task }: DraggableTaskCardProps) {
   const { openEditDialog, toggleComplete, deleteTask } = useApp();
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none">
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-auto">
       <TaskCard
         task={task}
         onToggle={toggleComplete}
@@ -72,7 +73,7 @@ function QuadrantDropZone({ quadrant, tasks, activeQuadrant }: QuadrantDropZoneP
         config.bg,
         config.border,
         highlighted ? 'border-4' : 'border-2',
-        isOver && 'ring-2 ring-primary ring-offset-2'
+        isOver && 'ring-2 ring-primary ring-offset-2 ring-offset-bg-secondary'
       )}
     >
       <div className="flex h-10 items-center justify-between border-b border-current border-opacity-20 px-4 py-2">
@@ -80,7 +81,7 @@ function QuadrantDropZone({ quadrant, tasks, activeQuadrant }: QuadrantDropZoneP
           <span className={cn('text-sm font-bold', config.text)}>{config.label}</span>
           <span className={cn('text-xs', config.text)}>{config.subtitle}</span>
         </div>
-        <span className={cn('rounded-full bg-white/70 px-2 py-0.5 text-xs font-medium', config.text)}>
+        <span className={cn('rounded-full bg-bg-primary/70 px-2 py-0.5 text-xs font-medium', config.text)}>
           {tasks.length}
         </span>
       </div>
@@ -104,7 +105,7 @@ export function QuadrantGrid() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 20,
       },
     })
   );
@@ -147,14 +148,30 @@ export function QuadrantGrid() {
     }),
   };
 
-  const q1Tasks = tasks.filter((t) => getQuadrant(t.urgency, t.importance) === 'Q1');
-  const q2Tasks = tasks.filter((t) => getQuadrant(t.urgency, t.importance) === 'Q2');
-  const q3Tasks = tasks.filter((t) => getQuadrant(t.urgency, t.importance) === 'Q3');
-  const q4Tasks = tasks.filter((t) => getQuadrant(t.urgency, t.importance) === 'Q4');
+  const isCompleted = (t: TaskWithTags) => t.status === 'completed';
+  const isOverdue = (t: TaskWithTags) =>
+    t.due_date && t.status !== 'completed' && isPast(parseISO(t.due_date));
+  const isVisibleInQuadrants = (t: TaskWithTags) => !isCompleted(t) && !isOverdue(t);
+
+  const q1Tasks = tasks.filter(
+    (t) => getQuadrant(t.urgency, t.importance) === 'Q1' && isVisibleInQuadrants(t)
+  );
+  const q2Tasks = tasks.filter(
+    (t) => getQuadrant(t.urgency, t.importance) === 'Q2' && isVisibleInQuadrants(t)
+  );
+  const q3Tasks = tasks.filter(
+    (t) => getQuadrant(t.urgency, t.importance) === 'Q3' && isVisibleInQuadrants(t)
+  );
+  const q4Tasks = tasks.filter(
+    (t) => getQuadrant(t.urgency, t.importance) === 'Q4' && isVisibleInQuadrants(t)
+  );
 
   // Sort by importance * urgency descending
   const sortTasks = (list: TaskWithTags[]) =>
     [...list].sort((a, b) => b.importance * b.urgency - a.importance * a.urgency);
+
+  const visibleCount = q1Tasks.length + q2Tasks.length + q3Tasks.length + q4Tasks.length;
+  const hiddenCount = tasks.length - visibleCount;
 
   if (loading) {
     return (
@@ -170,11 +187,11 @@ export function QuadrantGrid() {
         <div className="flex h-14 items-center justify-between border-b border-border-default px-6">
           <h1 className="text-lg font-semibold text-text-primary">四象限</h1>
           <span className="text-sm text-text-secondary">
-            {tasks.filter((t) => t.status !== 'completed').length} 待办 · {tasks.filter((t) => t.status === 'completed').length} 已完成
+            {visibleCount} 待处理{hiddenCount > 0 && ` · ${hiddenCount} 已隐藏`}
           </span>
         </div>
         <div className="flex-1 p-4">
-          <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-2 md:grid-rows-2 overflow-y-auto md:overflow-visible">
+          <div className="grid h-full grid-cols-1 gap-4 overflow-y-auto md:grid-cols-2 md:grid-rows-2">
             <QuadrantDropZone quadrant="Q2" tasks={sortTasks(q2Tasks)} activeQuadrant={activeQuadrant} />
             <QuadrantDropZone quadrant="Q1" tasks={sortTasks(q1Tasks)} activeQuadrant={activeQuadrant} />
             <QuadrantDropZone quadrant="Q4" tasks={sortTasks(q4Tasks)} activeQuadrant={activeQuadrant} />

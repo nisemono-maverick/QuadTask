@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   CalendarDays,
   CalendarCheck,
+  GanttChart,
   Trash2,
   X,
   ChevronDown,
@@ -19,6 +20,7 @@ import { useApp } from '../hooks/useApp';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Dialog } from './ui/Dialog';
+import { ConfirmDialog } from './ui/ConfirmDialog';
 import { cn } from '../utils';
 import { PRESET_COLORS } from '../constants';
 import * as LucideIcons from 'lucide-react';
@@ -68,6 +70,18 @@ export function Sidebar({ onClose }: SidebarProps) {
   const [editingTag, setEditingTag] = useState<{ id: string; name: string; color: string } | null>(null);
   const [tagName, setTagName] = useState('');
   const [tagColor, setTagColor] = useState(PRESET_COLORS[0]);
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState('');
+  const [confirmDescription, setConfirmDescription] = useState('');
+  const [confirmAction, setConfirmAction] = useState<() => void>(() => () => {});
+
+  const openConfirm = (title: string, description: string, onConfirm: () => void) => {
+    setConfirmTitle(title);
+    setConfirmDescription(description);
+    setConfirmAction(() => onConfirm);
+    setConfirmOpen(true);
+  };
 
   const systemLists = lists.filter((l) => l.type === 'system');
   const customLists = lists.filter((l) => l.type === 'custom');
@@ -188,6 +202,12 @@ export function Sidebar({ onClose }: SidebarProps) {
             active={viewMode === 'calendar'}
             onClick={() => handleSetViewMode('calendar')}
           />
+          <NavItem
+            label="甘特图"
+            icon={<GanttChart className="h-4 w-4" />}
+            active={viewMode === 'gantt'}
+            onClick={() => handleSetViewMode('gantt')}
+          />
         </div>
 
         {/* System Lists */}
@@ -240,9 +260,11 @@ export function Sidebar({ onClose }: SidebarProps) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (confirm(`确定删除清单 "${list.name}" 吗？其中任务将移至“所有任务”。`)) {
-                        deleteList(list.id);
-                      }
+                      openConfirm(
+                        `删除清单 "${list.name}"`,
+                        '其中的任务将移至“所有任务”，不会丢失。',
+                        () => deleteList(list.id)
+                      );
                     }}
                     className="ml-1 opacity-0 group-hover:opacity-100 text-text-tertiary hover:text-danger transition-opacity"
                   >
@@ -290,9 +312,11 @@ export function Sidebar({ onClose }: SidebarProps) {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm(`确定删除智能清单 "${list.name}" 吗？`)) {
-                          deleteList(list.id);
-                        }
+                        openConfirm(
+                          `删除智能清单 "${list.name}"`,
+                          '智能清单只是筛选视图，删除后不会影响任务。',
+                          () => deleteList(list.id)
+                        );
                       }}
                       className="ml-1 opacity-0 group-hover:opacity-100 text-text-tertiary hover:text-danger transition-opacity"
                     >
@@ -332,7 +356,11 @@ export function Sidebar({ onClose }: SidebarProps) {
                     </button>
                     <button
                       onClick={() => {
-                        if (confirm(`确定删除标签 "${tag.name}" 吗？`)) deleteTag(tag.id);
+                        openConfirm(
+                          `删除标签 "${tag.name}"`,
+                          '标签将从所有关联任务中移除，任务本身不会被删除。',
+                          () => deleteTag(tag.id)
+                        );
                       }}
                       className="ml-1 opacity-0 group-hover:opacity-100 text-text-tertiary hover:text-danger transition-opacity"
                     >
@@ -449,6 +477,17 @@ export function Sidebar({ onClose }: SidebarProps) {
           </div>
         </div>
       </Dialog>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          confirmAction();
+          setConfirmOpen(false);
+        }}
+        title={confirmTitle}
+        description={confirmDescription}
+      />
     </aside>
   );
 }
