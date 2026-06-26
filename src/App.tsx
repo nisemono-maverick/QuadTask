@@ -1,5 +1,15 @@
 import { useState } from 'react';
 import { Search, Plus, Menu } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { AppProvider } from './stores/AppContext';
 import { useApp } from './hooks/useApp';
 import { useMediaQuery } from './hooks/useMediaQuery';
@@ -17,15 +27,50 @@ import { Button } from './components/ui/Button';
 import { cn } from './utils';
 
 function AppContent() {
-  const { viewMode, setSearchQuery, searchQuery, dialogOpen, closeDialog, editingTask, openCreateDialog } = useApp();
+  const { viewMode, setSearchQuery, searchQuery, dialogOpen, closeDialog, editingTask, openCreateDialog, tasks, reorderTasks, moveTaskToList } = useApp();
   const [showSearch, setShowSearch] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   const closeSidebar = () => setSidebarOpen(false);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const activeTasks = tasks.filter((t) => t.status !== 'completed');
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    if (overId.startsWith('list-')) {
+      const listId = overId.replace('list-', '');
+      await moveTaskToList(activeId, listId);
+      return;
+    }
+
+    const oldIndex = activeTasks.findIndex((t) => t.id === activeId);
+    const newIndex = activeTasks.findIndex((t) => t.id === overId);
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const reordered = arrayMove(activeTasks, oldIndex, newIndex);
+      await reorderTasks(reordered.map((t) => t.id));
+    }
+  };
+
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-bg-secondary">
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <div className="flex h-screen w-full overflow-hidden bg-bg-secondary">
       {/* Desktop sidebar */}
       {!isMobile && (
         <aside className="shrink-0 w-60">
@@ -103,6 +148,7 @@ function AppContent() {
       <TaskDialog open={dialogOpen} onClose={closeDialog} task={editingTask} />
       <PWAInstallPrompt />
     </div>
+    </DndContext>
   );
 }
 

@@ -82,6 +82,7 @@ export interface AppContextValue extends AppState {
   clearFilters: () => void;
   createTask: (input: CreateTaskInput) => Promise<void>;
   updateTask: (id: string, updates: Partial<Omit<Task, 'id' | 'created_at'>>) => Promise<void>;
+  moveTaskToList: (taskId: string, listId: string) => Promise<void>;
   toggleComplete: (id: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   restoreTask: (id: string) => Promise<void>;
@@ -224,6 +225,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateTask = useCallback(async (id: string, updates: Partial<Omit<Task, 'id' | 'created_at'>>) => {
     await dbUpdateTask(id, updates);
+    await refreshTasks();
+  }, [refreshTasks]);
+
+  const moveTaskToList = useCallback(async (taskId: string, listId: string) => {
+    await dbUpdateTask(taskId, { list_id: listId });
     await refreshTasks();
   }, [refreshTasks]);
 
@@ -418,6 +424,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     clearFilters,
     createTask,
     updateTask,
+    moveTaskToList,
     toggleComplete: toggleCompleteAction,
     deleteTask: deleteTaskAction,
     restoreTask: restoreTaskAction,

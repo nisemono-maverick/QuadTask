@@ -1,18 +1,7 @@
 import { useState } from 'react';
 import { ClipboardList, Trash2, RotateCcw, CheckCircle2, GripVertical } from 'lucide-react';
 import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
@@ -104,26 +93,28 @@ function SortableTaskItem({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={cn('rounded-lg', isDragging && 'opacity-50')}>
-      <TaskItem
-        task={task}
-        isTrash={isTrash}
-        dragHandle={
-          <button
-            {...attributes}
-            {...listeners}
-            className="cursor-grab text-text-tertiary hover:text-text-secondary active:cursor-grabbing"
-            title="拖拽排序"
-          >
-            <GripVertical className="h-4 w-4" />
-          </button>
-        }
-        onToggle={onToggle}
-        onClick={onClick}
-        onDelete={onDelete}
-        onRestore={onRestore}
-        onPermanentDelete={onPermanentDelete}
-      />
+    <div ref={setNodeRef} style={style} className="rounded-lg">
+      <div className={cn('transition-all', isDragging && 'opacity-60 scale-95 rotate-1 shadow-xl')}>
+        <TaskItem
+          task={task}
+          isTrash={isTrash}
+          dragHandle={
+            <button
+              {...attributes}
+              {...listeners}
+              className="cursor-grab text-text-tertiary hover:text-text-secondary active:cursor-grabbing"
+              title="拖拽排序"
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
+          }
+          onToggle={onToggle}
+          onClick={onClick}
+          onDelete={onDelete}
+          onRestore={onRestore}
+          onPermanentDelete={onPermanentDelete}
+        />
+      </div>
     </div>
   );
 }
@@ -140,7 +131,6 @@ export function TaskList() {
     restoreTask,
     permanentDelete,
     emptyTrash,
-    reorderTasks,
   } = useApp();
 
   const selectedList = lists.find((l) => l.id === selectedListId);
@@ -178,29 +168,6 @@ export function TaskList() {
 
   // 已完成任务数量大时启用虚拟滚动阈值
   const COMPLETED_VIRTUAL_THRESHOLD = 100;
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = activeTasks.findIndex((t) => t.id === active.id);
-    const newIndex = activeTasks.findIndex((t) => t.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    const reordered = arrayMove(activeTasks, oldIndex, newIndex);
-    await reorderTasks(reordered.map((t) => t.id));
-  };
 
   if (loading) {
     return (
@@ -252,22 +219,20 @@ export function TaskList() {
               <>
                 {/* 未完成任务 - 可拖拽排序 */}
                 {enableSort ? (
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                    <SortableContext items={activeTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-                      {activeTasks.map((task) => (
-                        <SortableTaskItem
-                          key={task.id}
-                          task={task}
-                          isTrash={isTrash}
-                          onToggle={toggleComplete}
-                          onClick={openEditDialog}
-                          onDelete={deleteTask}
-                          onRestore={restoreTask}
-                          onPermanentDelete={(id) => openConfirm('永久删除任务', '任务将被永久删除，无法恢复。', () => permanentDelete(id))}
-                        />
-                      ))}
-                    </SortableContext>
-                  </DndContext>
+                  <SortableContext items={activeTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+                    {activeTasks.map((task) => (
+                      <SortableTaskItem
+                        key={task.id}
+                        task={task}
+                        isTrash={isTrash}
+                        onToggle={toggleComplete}
+                        onClick={openEditDialog}
+                        onDelete={deleteTask}
+                        onRestore={restoreTask}
+                        onPermanentDelete={(id) => openConfirm('永久删除任务', '任务将被永久删除，无法恢复。', () => permanentDelete(id))}
+                      />
+                    ))}
+                  </SortableContext>
                 ) : (
                   activeTasks.map((task) => (
                     <TaskItem

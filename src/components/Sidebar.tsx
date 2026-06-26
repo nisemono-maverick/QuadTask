@@ -16,6 +16,7 @@ import {
   Tag as TagIcon,
   Sparkles,
 } from 'lucide-react';
+import { useDroppable } from '@dnd-kit/core';
 import { useApp } from '../hooks/useApp';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -24,9 +25,38 @@ import { ConfirmDialog } from './ui/ConfirmDialog';
 import { cn } from '../utils';
 import { PRESET_COLORS } from '../constants';
 import * as LucideIcons from 'lucide-react';
-import type { Tag, ViewMode } from '../types';
+import type { Tag, ViewMode, List } from '../types';
 
 type IconComponent = ComponentType<{ className?: string; style?: CSSProperties }>;
+
+function DroppableListItem({
+  list,
+  active,
+  children,
+}: {
+  list: List;
+  active?: boolean;
+  children: ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `list-${list.id}`,
+    data: { list },
+    disabled: list.type !== 'custom',
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        'group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors',
+        active ? 'bg-primary-light text-primary' : 'text-text-secondary hover:bg-bg-tertiary hover:text-text-primary',
+        isOver && 'ring-2 ring-primary ring-offset-2 bg-primary/10'
+      )}
+    >
+      {children}
+    </div>
+  );
+}
 
 const iconMap: Record<string, IconComponent> = {
   LayoutGrid,
@@ -238,14 +268,10 @@ export function Sidebar({ onClose }: SidebarProps) {
           {expandedLists && (
             <div className="mt-1 space-y-1">
               {customLists.map((list) => (
-                <div
+                <DroppableListItem
                   key={list.id}
-                  className={cn(
-                    'group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors',
-                    viewMode === 'list' && selectedListId === list.id
-                      ? 'bg-primary-light text-primary'
-                      : 'text-text-secondary hover:bg-bg-tertiary hover:text-text-primary'
-                  )}
+                  list={list}
+                  active={viewMode === 'list' && selectedListId === list.id}
                 >
                   <button
                     onClick={() => handleSelectList(list.id)}
@@ -270,7 +296,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
-                </div>
+                </DroppableListItem>
               ))}
               <button
                 onClick={() => setNewListOpen(true)}

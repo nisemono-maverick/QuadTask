@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-- **阶段**: Phase 3 进行中（深色模式、甘特图、UI 美化、PWA 离线支持已完成）
+- **阶段**: Phase 3 进行中（深色模式、甘特图、UI 美化、PWA、拖拽到清单已完成）
 - **位置**: `/Users/maverick/AIProjects/QuadTask`
 - **最后更新**: 2026-06-27
 - **构建状态**: ✅ 通过 (`npm run build` 成功，`npm run lint` 0 warnings/errors)
@@ -53,6 +53,7 @@
 - [ ] 国际化（中/英）
 - [ ] 重复任务（预设规则 + Cron）
 - [x] UI 组件美化（弹窗、自定义 Select、日期输入、Textarea）
+- [x] 拖拽任务到左侧清单（Microsoft Todo 风格：缩小卡片 + 清单高亮边框）
 - [ ] 交互动效完善
 - [ ] 新手引导 / 种子数据
 
@@ -136,7 +137,7 @@ npm run lint
 
 - **数据存储**: 纯本地 IndexedDB（Dexie.js），无后端；当前数据库版本 v3
 - **象限划分**: urgency/importance 中位线为 5.5
-- **拖拽**: @dnd-kit 实现跨象限移动与清单内排序；释放后自动调整分值或持久化 sort_order
+- **拖拽**: @dnd-kit 实现跨象限移动、清单内排序、任务拖到左侧清单归类
 - **智能清单**: 清单表新增 `filter_data` 字段保存筛选条件，选择智能清单时自动应用过滤
 - **状态管理**: React Context + useReducer 风格（MVP 阶段足够）
 - **样式**: Tailwind CSS + CSS 变量，支持浅色/深色/跟随系统三种主题
