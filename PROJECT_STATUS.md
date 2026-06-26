@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-- **阶段**: Phase 3 进行中（深色模式已完成）
+- **阶段**: Phase 3 进行中（深色模式、甘特图、UI 美化已完成）
 - **位置**: `/Users/maverick/AIProjects/QuadTask`
 - **最后更新**: 2026-06-27
 - **构建状态**: ✅ 通过 (`npm run build` 成功，`npm run lint` 0 warnings/errors)
@@ -28,7 +28,7 @@
 - [x] 回收站：软删除、恢复、清空
 - [x] 清单视图分组：未完成任务置顶，已完成任务自动后置到"已完成"分组
 - [x] JSON 导入/导出备份
-- [x] 基础 UI 组件：Button / Input / Dialog / Slider / TaskCard / QuickAdd / TaskDialog
+- [x] 基础 UI 组件：Button / Input / Dialog / Slider / Select / Textarea / DateTimeInput / ConfirmDialog / TaskCard / QuickAdd / TaskDialog
 
 ## 暂未实现的功能（后续计划）
 
@@ -142,9 +142,9 @@ npm run lint
 
 ## 已知限制 / 注意事项
 
-1. **移动端未适配**: 布局为桌面端优先。
-2. **提醒通知未实现**: 没有到期提醒。
-3. **chunk 体积**: 生产构建 JS 约 1MB，建议后续按需 code-split。
+1. **提醒通知未实现**: 没有到期提醒。
+2. **PWA 未实现**: 暂不支持离线使用与安装提示。
+3. **chunk 体积**: 生产构建 JS 约 1.1MB，建议后续按需 code-split。
 4. **npm registry**: 安装依赖时若官方 registry 超时，可切换淘宝镜像：
    ```bash
    npm install --registry=https://registry.npmmirror.com
@@ -152,13 +152,14 @@ npm run lint
 
 ## 下一步推荐工作
 
-Phase 2 与深色模式已完成，若下次继续，建议按以下顺序推进 Phase 3：
+Phase 2、深色模式、甘特图与 UI 美化已完成，若下次继续，建议按以下顺序推进 Phase 3：
 
 1. **提醒通知**: 浏览器 Notification API + 到期提醒
 2. **PWA 离线支持**: 添加 vite-plugin-pwa 和 Service Worker
 3. **键盘快捷键**: 快速创建、切换视图、完成任务
 4. **重复任务**: 预设规则 + Cron 调度
 5. **国际化（中/英）**
+6. **数据统计**: 完成趋势与象限分布图表
 
 ## 启动检查清单（新会话）
 
