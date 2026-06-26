@@ -93,28 +93,26 @@ function SortableTaskItem({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="rounded-lg">
-      <div className={cn('transition-all', isDragging && 'opacity-60 scale-95 rotate-1 shadow-xl')}>
-        <TaskItem
-          task={task}
-          isTrash={isTrash}
-          dragHandle={
-            <button
-              {...attributes}
-              {...listeners}
-              className="cursor-grab text-text-tertiary hover:text-text-secondary active:cursor-grabbing"
-              title="拖拽排序"
-            >
-              <GripVertical className="h-4 w-4" />
-            </button>
-          }
-          onToggle={onToggle}
-          onClick={onClick}
-          onDelete={onDelete}
-          onRestore={onRestore}
-          onPermanentDelete={onPermanentDelete}
-        />
-      </div>
+    <div ref={setNodeRef} style={style} className={cn('rounded-lg', isDragging && 'opacity-0')}>
+      <TaskItem
+        task={task}
+        isTrash={isTrash}
+        dragHandle={
+          <button
+            {...attributes}
+            {...listeners}
+            className="cursor-grab text-text-tertiary hover:text-text-secondary active:cursor-grabbing"
+            title="拖拽排序"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+        }
+        onToggle={onToggle}
+        onClick={onClick}
+        onDelete={onDelete}
+        onRestore={onRestore}
+        onPermanentDelete={onPermanentDelete}
+      />
     </div>
   );
 }
@@ -164,7 +162,6 @@ export function TaskList() {
     });
 
   const showGrouped = !isTrash && !isCompletedList;
-  const enableSort = showGrouped && activeTasks.length > 1;
 
   // 已完成任务数量大时启用虚拟滚动阈值
   const COMPLETED_VIRTUAL_THRESHOLD = 100;
@@ -217,25 +214,10 @@ export function TaskList() {
           <div className="space-y-2">
             {showGrouped ? (
               <>
-                {/* 未完成任务 - 可拖拽排序 */}
-                {enableSort ? (
-                  <SortableContext items={activeTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-                    {activeTasks.map((task) => (
-                      <SortableTaskItem
-                        key={task.id}
-                        task={task}
-                        isTrash={isTrash}
-                        onToggle={toggleComplete}
-                        onClick={openEditDialog}
-                        onDelete={deleteTask}
-                        onRestore={restoreTask}
-                        onPermanentDelete={(id) => openConfirm('永久删除任务', '任务将被永久删除，无法恢复。', () => permanentDelete(id))}
-                      />
-                    ))}
-                  </SortableContext>
-                ) : (
-                  activeTasks.map((task) => (
-                    <TaskItem
+                {/* 未完成任务 - 可拖拽排序/移动到清单 */}
+                <SortableContext items={activeTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+                  {activeTasks.map((task) => (
+                    <SortableTaskItem
                       key={task.id}
                       task={task}
                       isTrash={isTrash}
@@ -245,8 +227,8 @@ export function TaskList() {
                       onRestore={restoreTask}
                       onPermanentDelete={(id) => openConfirm('永久删除任务', '任务将被永久删除，无法恢复。', () => permanentDelete(id))}
                     />
-                  ))
-                )}
+                  ))}
+                </SortableContext>
 
                 {/* 已完成分组 */}
                 {completedTasks.length > 0 && (

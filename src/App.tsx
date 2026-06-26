@@ -2,12 +2,16 @@ import { useState } from 'react';
 import { Search, Plus, Menu } from 'lucide-react';
 import {
   DndContext,
-  closestCenter,
+  DragOverlay,
+  pointerWithin,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
+  defaultDropAnimationSideEffects,
+  type DropAnimation,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { AppProvider } from './stores/AppContext';
@@ -23,13 +27,15 @@ import { SettingsView } from './components/SettingsView';
 import { FilterBar } from './components/FilterBar';
 import { TaskDialog } from './components/TaskDialog';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
+import { TaskCard } from './components/TaskCard';
 import { Button } from './components/ui/Button';
 import { cn } from './utils';
 
 function AppContent() {
-  const { viewMode, setSearchQuery, searchQuery, dialogOpen, closeDialog, editingTask, openCreateDialog, tasks, reorderTasks, moveTaskToList } = useApp();
+  const { viewMode, setSearchQuery, searchQuery, dialogOpen, closeDialog, editingTask, openCreateDialog, tasks, reorderTasks, moveTaskToList, toggleComplete, openEditDialog } = useApp();
   const [showSearch, setShowSearch] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   const closeSidebar = () => setSidebarOpen(false);
@@ -46,9 +52,15 @@ function AppContent() {
   );
 
   const activeTasks = tasks.filter((t) => t.status !== 'completed');
+  const activeTask = activeDragId ? tasks.find((t) => t.id === activeDragId) : null;
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragId(event.active.id as string);
+  };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveDragId(null);
     if (!over || active.id === over.id) return;
 
     const activeId = active.id as string;
@@ -68,8 +80,18 @@ function AppContent() {
     }
   };
 
+  const dropAnimation: DropAnimation = {
+    sideEffects: defaultDropAnimationSideEffects({
+      styles: {
+        active: {
+          opacity: '0.5',
+        },
+      },
+    }),
+  };
+
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex h-screen w-full overflow-hidden bg-bg-secondary">
       {/* Desktop sidebar */}
       {!isMobile && (
@@ -147,6 +169,16 @@ function AppContent() {
 
       <TaskDialog open={dialogOpen} onClose={closeDialog} task={editingTask} />
       <PWAInstallPrompt />
+      <DragOverlay dropAnimation={dropAnimation}>
+        {activeTask ? (
+          <TaskCard
+            task={activeTask}
+            onToggle={toggleComplete}
+            onClick={openEditDialog}
+            className="rotate-2 scale-90 cursor-grabbing opacity-90 shadow-2xl"
+          />
+        ) : null}
+      </DragOverlay>
     </div>
     </DndContext>
   );

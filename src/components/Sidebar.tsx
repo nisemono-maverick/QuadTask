@@ -48,7 +48,7 @@ function DroppableListItem({
     <div
       ref={setNodeRef}
       className={cn(
-        'group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors',
+        'group flex items-center justify-between rounded-lg text-sm transition-colors',
         active ? 'bg-primary-light text-primary' : 'text-text-secondary hover:bg-bg-tertiary hover:text-text-primary',
         isOver && 'ring-2 ring-primary ring-offset-2 bg-primary/10'
       )}
@@ -275,7 +275,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                 >
                   <button
                     onClick={() => handleSelectList(list.id)}
-                    className="flex flex-1 items-center gap-3 min-w-0"
+                    className="flex flex-1 items-center gap-3 min-w-0 px-3 py-2"
                   >
                     {(() => {
                       const Icon = getIcon(list.icon);
@@ -292,7 +292,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                         () => deleteList(list.id)
                       );
                     }}
-                    className="ml-1 opacity-0 group-hover:opacity-100 text-text-tertiary hover:text-danger transition-opacity"
+                    className="px-3 py-2 opacity-0 group-hover:opacity-100 text-text-tertiary hover:text-danger transition-opacity"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
